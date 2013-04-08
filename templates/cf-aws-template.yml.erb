@@ -657,8 +657,6 @@ properties:
       client_secret: "c1oudc0wc1oudc0w"
     admin:
       client_secret: MeM5fER8evgEisjj
-    login:
-      client_secret: HZtd2FyZS5jb20iL
     batch:
       username: do0H2AKay2jAc
       password: FSCTiplI5Q83n
@@ -671,6 +669,13 @@ properties:
         - support-signon
         - login
     clients:
+      login:
+        id: login
+        scope: openid
+        authorities: oauth.login
+        secret: HZtd2FyZS5jb20iL
+        authorized-grant-types: authorization_code,client_credentials,refresh_token
+        redirect-uri: http://login.<%= find("properties.domain") %>
       portal:
         id: portal
         scope: scim.write,scim.read,openid,cloud_controller.read,cloud_controller.write
@@ -710,7 +715,7 @@ properties:
         authorities: uaa.resource,oauth.service,clients.read,clients.write,clients.secret
         authorized-grant-types: authorization_code,client_credentials,password,implicit
         id: servicesmgmt
-        redirect-uri: http://servicesmgmt.stevenson.cf-app.com/auth/cloudfoundry/callback
+        redirect-uri: http://servicesmgmt.<%= find("properties.domain") %>/auth/cloudfoundry/callback
         override: true
         autoapprove: true
 
