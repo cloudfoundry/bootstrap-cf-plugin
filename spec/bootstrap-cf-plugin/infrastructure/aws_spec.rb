@@ -1,29 +1,31 @@
 require 'spec_helper'
 
 describe BootstrapCfPlugin::Infrastructure::Aws do
-  context "::bootstrap" do
-    let(:cf_release_path) { "/tmp/spec-cf-release" }
-    let!(:working_path) do
-      Dir.mktmpdir.tap do |path|
-        FileUtils.cp asset("aws_receipt.yml"), File.join(path, "aws_vpc_receipt.yml")
-        FileUtils.cp asset("rds_receipt.yml"), File.join(path, "aws_rds_receipt.yml")
-      end
+
+  let(:cf_release_path) { "/tmp/spec-cf-release" }
+  let!(:working_path) do
+    Dir.mktmpdir.tap do |path|
+      FileUtils.cp asset("aws_receipt.yml"), File.join(path, "aws_vpc_receipt.yml")
+      FileUtils.cp asset("rds_receipt.yml"), File.join(path, "aws_rds_receipt.yml")
     end
+  end
+
+  before :each do
+    FileUtils.rm_rf(cf_release_path)
+    any_instance_of(BootstrapCfPlugin::Generator, :director_uuid => "12345-12345-12345")
+    stub(described_class).cf_release_path { cf_release_path }
+    stub(described_class).sh
+  end
+
+  after :each do
+    execute_command
+  end
+
+  context "::bootstrap" do
     let(:execute_command) do
       Dir.chdir(working_path) do
         BootstrapCfPlugin::Infrastructure::Aws.bootstrap
       end
-    end
-
-    before do
-      FileUtils.rm_rf(cf_release_path)
-      any_instance_of(BootstrapCfPlugin::Generator, :director_uuid => "12345-12345-12345")
-      stub(described_class).cf_release_path { cf_release_path }
-      stub(described_class).sh
-    end
-
-    after do
-      execute_command
     end
 
     describe "releases" do
@@ -171,6 +173,23 @@ describe BootstrapCfPlugin::Infrastructure::Aws do
 
     it 'does the bosh deploy' do
       mock(described_class).sh('bosh -n deploy')
+    end
+  end
+
+  context "::bootstrap template file" do
+    let(:template_file) { "template.erb" }
+    let(:execute_command) do
+      Dir.chdir(working_path) do
+        BootstrapCfPlugin::Infrastructure::Aws.bootstrap template_file
+      end
+    end
+
+    before do
+      stub(described_class).sh("bosh -n deployments | grep -v 'cf-deployment'") { 0 }
+    end
+
+    it 'applies the template given with bosh diff' do
+      mock(described_class).sh("bosh -n diff template.erb")
     end
   end
 end

@@ -3,7 +3,7 @@ module BootstrapCfPlugin
     class Aws
       DEFAULT_LIGHT_STEMCELL_URL = "http://bosh-jenkins-artifacts.s3.amazonaws.com/last_successful_bosh-stemcell_light.tgz"
 
-      def self.bootstrap
+      def self.bootstrap(template_file = nil)
         begin
           puts("Checking for release...")
           sh("bosh -n releases | grep -v 'bosh-release'")
@@ -36,7 +36,7 @@ module BootstrapCfPlugin
 
           puts("Missing deployment, creating...")
           generate_stub
-          template_file = File.expand_path(File.join(File.dirname(__FILE__),'..','..','..','templates','cf-aws-template.yml.erb'))
+          template_file ||= File.expand_path(File.join(File.dirname(__FILE__),'..','..','..','templates','cf-aws-template.yml.erb'))
 
           sh("bosh -n deployment cf-aws.yml")
           sh("bosh -n diff #{template_file}")

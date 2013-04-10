@@ -32,12 +32,13 @@ module BootstrapCfPlugin
     desc "Bootstrap a CF deployment"
     group :admin
     input :infrastructure, :argument => :required, :desc => "The infrastructure to bootstrap and deploy"
+    input :template, :argument => :optional, :desc => "The template file for the CF deployment"
     def bootstrap
       infrastructure = input[:infrastructure].to_s.capitalize
       infrastructure_class = lookup_infrastructure_class(infrastructure)
       raise "Unsupported infrastructure #{input[:infrastructure]}" unless infrastructure_class
       DirectorCheck.check
-      infrastructure_class.bootstrap
+      infrastructure_class.bootstrap(input[:template])
 
       cf_aws_manifest = load_yaml_file("cf-aws.yml")
       cf_properties = cf_aws_manifest.fetch('properties')

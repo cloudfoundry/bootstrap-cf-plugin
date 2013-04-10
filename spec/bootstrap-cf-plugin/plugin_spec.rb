@@ -89,8 +89,13 @@ command BootstrapCfPlugin::Plugin do
     end
 
     it "should invoke AWS.bootstrap when infrastructure is AWS" do
-      mock(BootstrapCfPlugin::Infrastructure::Aws).bootstrap
+      mock(BootstrapCfPlugin::Infrastructure::Aws).bootstrap.with(nil)
       subject
+    end
+
+    it "should use given template file" do
+      mock(BootstrapCfPlugin::Infrastructure::Aws).bootstrap.with("test.erb")
+      cf %W[bootstrap aws test.erb]
     end
 
     it 'targets the CF client' do
