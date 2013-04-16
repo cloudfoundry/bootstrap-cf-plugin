@@ -13,7 +13,7 @@ module BootstrapCfPlugin
     end
 
     def lookup_infrastructure_class(infrastructure)
-      infrastructure_module = Kernel.const_get("BootstrapCfPlugin").const_get("Infrastructure")
+      infrastructure_module = ::BootstrapCfPlugin::Infrastructure
       infrastructure_module.const_get(infrastructure) if infrastructure_module.const_defined?(infrastructure)
     end
 
