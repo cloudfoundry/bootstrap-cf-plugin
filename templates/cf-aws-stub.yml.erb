@@ -7,29 +7,29 @@ releases:
 
 # Do not change this property, it will be completely overwritten; 'bosh diff' requires at least 1 network
 networks:
-- name: cf
+- name: cf1
   type: manual
   subnets:
-  - range: 10.10.2.0/23
+  - range: 10.10.16.0/24
     name: default_unused
     reserved:
-    - 10.10.2.2 - 10.10.2.9
+    - 10.10.16.2 - 10.10.16.9
     static:
-    - 10.10.2.10 - 10.10.2.50
-    gateway: 10.10.2.1
+    - 10.10.16.10 - 10.10.16.255
+    gateway: 10.10.16.1
     dns:
     - 10.10.0.2  # amazon has only 1 DNS server for the whole VPC at x.x.0.2
 
-- name: services
+- name: services1
   type: manual
   subnets:
-  - range: 10.10.4.0/24
+  - range: 10.10.32.0/20
     name: default_unused
     reserved:
-    - 10.10.4.2 - 10.10.4.9
+    - 10.10.32.2 - 10.10.32.9
     static:
-    - 10.10.4.10 - 10.10.4.200
-    gateway: 10.10.4.1
+    - 10.10.32.10 - 10.10.32.255
+    gateway: 10.10.32.1
     dns:
     - 10.10.0.2  # amazon has only 1 DNS server for the whole VPC at x.x.0.2
 
@@ -42,5 +42,5 @@ properties:
       secret_access_key: <%= aws_secret_access_key %>
       availability_zone: <%= availability_zone %>
       subnet_ids:
-        cf: <%= subnet_id "cf" %>
-        services: <%= subnet_id "services" %>
+        cf1: <%= subnet_id "cf1" %>
+        services1: <%= subnet_id "services1" %>

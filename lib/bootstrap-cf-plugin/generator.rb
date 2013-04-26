@@ -28,7 +28,7 @@ module BootstrapCfPlugin
     end
 
     def availability_zone
-      @aws_request["vpc"]["subnets"]["bosh"]["availability_zone"]
+      @aws_request["vpc"]["subnets"]["cf1"]["availability_zone"]
     end
 
     def subnet_id(subnet_name)
