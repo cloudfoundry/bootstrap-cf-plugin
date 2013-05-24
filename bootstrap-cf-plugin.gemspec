@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.require_path = "lib"
 
   s.add_dependency "bosh_cli_plugin_aws", "~>1.5.0.pre.3"
-  s.add_dependency "admin-cf-plugin", "~> 0.2"
-  s.add_dependency "cf", "~>0.6"
+  s.add_dependency "admin-cf-plugin", "~> 1.0"
+  s.add_dependency "cf", "~>1.0"
   s.add_dependency "haddock"
 end
