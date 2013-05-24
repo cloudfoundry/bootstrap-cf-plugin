@@ -62,7 +62,7 @@ describe BootstrapCfPlugin::Infrastructure::Aws do
       end
 
       it 'uploads the cf bosh release' do
-        mock(described_class).sh("cd #{cf_release_path} && bosh -n upload release --rebase")
+        mock(described_class).sh_output("cd #{cf_release_path} && bosh -n upload release --rebase")
         subject
       end
 
@@ -70,7 +70,7 @@ describe BootstrapCfPlugin::Infrastructure::Aws do
         command = "cd #{cf_release_path} && bosh -n upload release --rebase"
         error = 'Error 100: Rebase is attempted without any job or package changes'
 
-        mock(described_class).sh(command) { raise RuntimeError.new(error) }
+        mock(described_class).sh_output(command) { raise RuntimeError.new(error) }
         expect { subject }.not_to raise_error
       end
     end

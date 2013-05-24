@@ -47,7 +47,7 @@ module BootstrapCfPlugin
         update_release path
         sh("cd #{path} && bosh -n create release --force")
         begin
-          sh("cd #{path} && bosh -n upload release --rebase")
+          puts sh_output("cd #{path} && bosh -n upload release --rebase")
         rescue RuntimeError => e
           check_release_error e
         end
@@ -83,6 +83,14 @@ module BootstrapCfPlugin
         raise "Failed to run: #{cmd}" unless system(cmd)
       end
 
+      def self.sh_output(cmd)
+        output = `#{cmd}`
+        unless $?.success?
+          raise "Failed to run: #{cmd}\n\nOutput:\n\n#{output}"
+        end
+        output
+      end
+
       def self.light_stemcell_url
         ENV["BOSH_OVERRIDE_LIGHT_STEMCELL_URL"] || DEFAULT_LIGHT_STEMCELL_URL
       end
@@ -93,10 +101,12 @@ module BootstrapCfPlugin
 
       def self.check_release_error(e)
         case e.message
-          when /upload release/
-            puts 'Using existing release'
           when /Rebase is attempted without any job or package changes/
-            puts 'Skipping upload release. No job or package changes'
+            puts e.message
+            puts 'Skipping upload release. No job or package changes.'
+          when /upload release/
+            puts e.message
+            puts 'Using existing release'
           else
             raise
         end
