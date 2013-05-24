@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-command BootstrapCfPlugin::Plugin do
+describe BootstrapCfPlugin::Plugin do
   let(:client) { fake_client }
   let(:mongodb_token) { 'mongo-secret' }
   let(:mysql_token) { 'mysql-secret' }
@@ -20,6 +20,7 @@ command BootstrapCfPlugin::Plugin do
     stub_invoke :create_space, anything
     stub_invoke :create_org, anything
     stub_invoke :create_service_auth_token, anything
+    stub_client
   end
 
 
