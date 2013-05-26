@@ -7,14 +7,14 @@ describe BootstrapCfPlugin::Infrastructure::Aws do
   let(:manifest_name) { "#{release_name.gsub('-release', '')}-aws.yml" }
 
   before do
-    any_instance_of(BootstrapCfPlugin::Generator, :director_uuid => "12345-12345-12345")
+    any_instance_of(BootstrapCfPlugin::Infrastructure::Aws::Generator, :director_uuid => "12345-12345-12345")
     stub(described_class).sh
     stub(described_class).sh("git clone -b release-candidate http://github.com/cloudfoundry/#{release_name} #{cf_release_path}") { clone_release }
 
     stub(described_class).cf_release_path { |name| cf_release_path }
 
-    FileUtils.cp asset("aws_receipt.yml"), File.join(temp_dir, "aws_vpc_receipt.yml")
-    FileUtils.cp asset("rds_receipt.yml"), File.join(temp_dir, "aws_rds_receipt.yml")
+    FileUtils.cp asset("aws/aws_receipt.yml"), File.join(temp_dir, "aws_vpc_receipt.yml")
+    FileUtils.cp asset("aws/rds_receipt.yml"), File.join(temp_dir, "aws_rds_receipt.yml")
   end
 
   after do

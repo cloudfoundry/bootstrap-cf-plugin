@@ -1,7 +1,6 @@
 require "erb"
 require "cf"
 require "common/version"
-require "bootstrap-cf-plugin/generator"
 require "bootstrap-cf-plugin/plugin"
 require "bootstrap-cf-plugin/shared_secrets_file"
 require "bootstrap-cf-plugin/director_check"
