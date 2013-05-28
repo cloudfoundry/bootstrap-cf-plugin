@@ -33,13 +33,14 @@ module BootstrapCfPlugin
     input :infrastructure, :argument => :required, :desc => "The infrastructure to bootstrap and deploy"
     input :template, :argument => :optional, :desc => "The template file for the CF deployment"
     def bootstrap
-      infrastructure_class = lookup_infrastructure_class(input[:infrastructure])
+      infrastructure = input[:infrastructure]
+      infrastructure_class = lookup_infrastructure_class(infrastructure)
       DirectorCheck.check
       infrastructure_class.bootstrap(input[:template])
 
-      cf_aws_manifest = load_yaml_file("cf-aws.yml")
-      cf_aws_services_manifest = load_yaml_file("cf-services-aws.yml")
-      cf_properties = cf_aws_manifest.fetch('properties')
+      cf_manifest = load_yaml_file("cf-#{infrastructure}.yml")
+      cf_services_manifest = load_yaml_file("cf-services-#{infrastructure}.yml")
+      cf_properties = cf_manifest.fetch('properties')
       uaa_users = cf_properties.fetch('uaa').fetch('scim').fetch('users')
 
       uaa_user = uaa_users.first.split("|")
@@ -55,7 +56,7 @@ module BootstrapCfPlugin
       invoke :target, :url => cf_properties.fetch('cc').fetch('srv_api_uri'), :organization => org, :space => space
 
       # invoke a bunch of create-service-token commands
-      (tokens_from_jobs(cf_aws_services_manifest.fetch('jobs', []))).each do |gateway_info|
+      (tokens_from_jobs(cf_services_manifest.fetch('jobs', []))).each do |gateway_info|
         begin
           invoke :create_service_auth_token, gateway_info
         rescue CFoundry::ServiceAuthTokenLabelTaken => e
@@ -70,10 +71,11 @@ module BootstrapCfPlugin
     group :admin
     input :infrastructure, :argument => :required, :desc => "The infrastructure for which to generate a stub"
     def generate_stub
-      infrastructure_class = lookup_infrastructure_class(input[:infrastructure])
+      infrastructure = input[:infrastructure]
+      infrastructure_class = lookup_infrastructure_class(infrastructure)
       DirectorCheck.check
       SharedSecretsFile.find_or_create("cf-shared-secrets.yml")
-      infrastructure_class.generate_stub("cf-aws-stub.yml", "cf-shared-secrets.yml")
+      infrastructure_class.generate_stub("cf-#{infrastructure}-stub.yml", "cf-shared-secrets.yml")
     end
 
     private
