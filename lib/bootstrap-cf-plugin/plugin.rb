@@ -7,8 +7,13 @@ module BootstrapCfPlugin
     end
 
     def lookup_infrastructure_class(infrastructure)
+      infrastructure_class = infrastructure.to_s.capitalize
       infrastructure_module = ::BootstrapCfPlugin::Infrastructure
-      infrastructure_module.const_get(infrastructure) if infrastructure_module.const_defined?(infrastructure)
+      if infrastructure_module.const_defined?(infrastructure_class)
+        infrastructure_module.const_get(infrastructure_class)
+      else
+        raise "Unsupported infrastructure #{infrastructure}"
+      end
     end
 
     def tokens_from_jobs(jobs)
@@ -28,9 +33,7 @@ module BootstrapCfPlugin
     input :infrastructure, :argument => :required, :desc => "The infrastructure to bootstrap and deploy"
     input :template, :argument => :optional, :desc => "The template file for the CF deployment"
     def bootstrap
-      infrastructure = input[:infrastructure].to_s.capitalize
-      infrastructure_class = lookup_infrastructure_class(infrastructure)
-      raise "Unsupported infrastructure #{input[:infrastructure]}" unless infrastructure_class
+      infrastructure_class = lookup_infrastructure_class(input[:infrastructure])
       DirectorCheck.check
       infrastructure_class.bootstrap(input[:template])
 
@@ -67,9 +70,7 @@ module BootstrapCfPlugin
     group :admin
     input :infrastructure, :argument => :required, :desc => "The infrastructure for which to generate a stub"
     def generate_stub
-      infrastructure = input[:infrastructure].to_s.capitalize
-      infrastructure_class = lookup_infrastructure_class(infrastructure)
-      raise "Unsupported infrastructure #{input[:infrastructure]}" unless infrastructure_class
+      infrastructure_class = lookup_infrastructure_class(input[:infrastructure])
       DirectorCheck.check
       SharedSecretsFile.find_or_create("cf-shared-secrets.yml")
       infrastructure_class.generate_stub("cf-aws-stub.yml", "cf-shared-secrets.yml")
