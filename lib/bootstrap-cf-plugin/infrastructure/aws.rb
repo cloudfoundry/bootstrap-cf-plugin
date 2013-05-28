@@ -22,6 +22,7 @@ module BootstrapCfPlugin
 
         sh("git clone -b release-candidate #{git_url} #{cf_release_path}") unless Dir.exist?(cf_release_path)
         dev_config_path = File.join(cf_release_path, "config", "dev.yml")
+        FileUtils.mkdir_p(File.dirname(dev_config_path))
         unless File.exists?(dev_config_path)
           File.open(dev_config_path, "w") { |f| f.write("---\ndev_name: #{release_name}") }
         end

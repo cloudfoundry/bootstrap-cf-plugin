@@ -9,8 +9,8 @@ describe BootstrapCfPlugin::Infrastructure::Aws do
   before do
     any_instance_of(BootstrapCfPlugin::Generator, :director_uuid => "12345-12345-12345")
     stub(described_class).sh
-    stub(described_class).sh("git clone -b release-candidate http://github.com/cloudfoundry/#{release_name} #{cf_release_path}") { clone_release }
-
+    stub(described_class).sh_output
+    stub(described_class).puts
     stub(described_class).cf_release_path { |name| cf_release_path }
 
     FileUtils.cp asset("aws_receipt.yml"), File.join(temp_dir, "aws_vpc_receipt.yml")
