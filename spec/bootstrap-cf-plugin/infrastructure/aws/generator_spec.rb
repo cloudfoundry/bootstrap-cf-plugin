@@ -1,10 +1,11 @@
 require 'spec_helper'
+require "bootstrap-cf-plugin/infrastructure/aws/generator"
 
-describe BootstrapCfPlugin::Generator do
-  let(:aws_receipt_file) { asset 'aws_receipt.yml' }
-  let(:rds_receipt_file) { asset 'rds_receipt.yml' }
+describe BootstrapCfPlugin::Infrastructure::Aws::Generator do
+  let(:aws_receipt_file) { asset("aws/aws_receipt.yml") }
+  let(:rds_receipt_file) { asset("aws/rds_receipt.yml") }
   subject do
-    BootstrapCfPlugin::Generator.new(aws_receipt_file, rds_receipt_file)
+    BootstrapCfPlugin::Infrastructure::Aws::Generator.new(aws_receipt_file, rds_receipt_file)
   end
 
   describe "#save" do
@@ -23,7 +24,7 @@ describe BootstrapCfPlugin::Generator do
       let(:upstream_manifest) { nil }
 
       it "generates the expected YAML output" do
-        generated_manifest.should == YAML.load_file(asset 'expected_cf_stub.yml')
+        generated_manifest.should == YAML.load_file(asset("aws/expected_cf_stub.yml"))
       end
 
       it 'gets both CF and Services subnets' do
@@ -35,10 +36,10 @@ describe BootstrapCfPlugin::Generator do
     end
 
     context "when an upstream manifest is provided" do
-      let(:upstream_manifest) { asset "shared_manifest.yml" }
+      let(:upstream_manifest) { asset("shared_manifest.yml") }
 
       it "includes properties from that manifest" do
-        generated_manifest.should == YAML.load_file(asset 'expected_cf_stub_with_secrets.yml')
+        generated_manifest.should == YAML.load_file(asset("aws/expected_cf_stub_with_secrets.yml"))
       end
 
       it 'gets both CF and Services subnets' do

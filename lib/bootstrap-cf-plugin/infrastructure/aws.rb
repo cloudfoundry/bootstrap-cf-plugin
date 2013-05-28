@@ -97,7 +97,10 @@ module BootstrapCfPlugin
       end
 
       def self.generator
-        @generator ||= BootstrapCfPlugin::Generator.new("aws_vpc_receipt.yml", "aws_rds_receipt.yml")
+        @generator ||= begin
+          require "bootstrap-cf-plugin/infrastructure/aws/generator"
+          BootstrapCfPlugin::Infrastructure::Aws::Generator.new("aws_vpc_receipt.yml", "aws_rds_receipt.yml")
+        end
       end
 
       def self.check_release_error(e)

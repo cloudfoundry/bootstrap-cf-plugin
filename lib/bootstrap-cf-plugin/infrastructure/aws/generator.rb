@@ -1,4 +1,4 @@
-module BootstrapCfPlugin
+class BootstrapCfPlugin::Infrastructure::Aws
   class Generator
     def initialize(aws_receipt_file, rds_receipt_file)
       @aws_receipt = load_yaml_file(aws_receipt_file)
@@ -45,7 +45,7 @@ module BootstrapCfPlugin
 
     def manifest_stub(manifest_name)
       manifest_stub_file = manifest_name.gsub(/(.*)\.yml$/, '\1-stub.yml.erb')
-      File.expand_path("../../../templates/#{manifest_stub_file}", __FILE__)
+      File.join(templates_dir, manifest_stub_file)
     end
 
     def save(manifest_name, upstream_manifest)
@@ -56,8 +56,12 @@ module BootstrapCfPlugin
 
     private
 
+    def templates_dir
+      File.expand_path("../../../../../templates", __FILE__)
+    end
+
     def to_hash(upstream_manifest)
-      manifest_stub = File.expand_path("../../../templates/cf-aws-stub.yml.erb", __FILE__)
+      manifest_stub = File.join(templates_dir, "cf-aws-stub.yml.erb")
       hash = YAML.load ERB.new(File.read(manifest_stub)).result(binding)
       hash["properties"].merge!(@rds_receipt["deployment_manifest"]["properties"])
 
