@@ -1,7 +1,7 @@
 module BootstrapCfPlugin
   module Infrastructure
     class Aws
-      DEFAULT_LIGHT_STEMCELL_URL = "http://bosh-jenkins-artifacts.s3.amazonaws.com/last_successful_bosh-stemcell-aws_light.tgz"
+      DEFAULT_LIGHT_STEMCELL_URL = "http://bosh-jenkins-artifacts.s3.amazonaws.com/bosh-stemcell/aws/latest-light-bosh-stemcell-aws.tgz"
 
       def self.bootstrap(template_file = nil)
         upload_stemcell

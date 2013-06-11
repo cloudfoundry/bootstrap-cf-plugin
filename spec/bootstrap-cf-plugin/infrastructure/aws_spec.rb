@@ -103,8 +103,8 @@ describe BootstrapCfPlugin::Infrastructure::Aws do
       end
     end
 
-    let(:stemcell_file) { "last_successful_bosh-stemcell-aws_light.tgz" }
-    let(:bucket_url) { "http://bosh-jenkins-artifacts.s3.amazonaws.com" }
+    let(:stemcell_file) { "latest-light-bosh-stemcell-aws.tgz" }
+    let(:bucket_url) { "http://bosh-jenkins-artifacts.s3.amazonaws.com/bosh-stemcell/aws" }
 
     context "if no stemcell URL override is set in the environment" do
       context "if the stemcell doesn't exist" do
