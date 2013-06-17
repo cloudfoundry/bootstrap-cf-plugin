@@ -62,7 +62,7 @@ module BootstrapCfPlugin
             puts("Missing stemcell uploading...")
           end
           stemcell_file_name = light_stemcell_url.split("/").last
-          sh("cd /tmp && rm -f #{stemcell_file_name} && wget '#{light_stemcell_url}' --no-check-certificate")
+          sh("cd /tmp && rm -f #{stemcell_file_name} && curl '#{light_stemcell_url}' --insecure")
           sh("bosh -n upload stemcell /tmp/#{stemcell_file_name}")
         rescue Exception => e
           raise e unless e.message =~ /stemcells/
