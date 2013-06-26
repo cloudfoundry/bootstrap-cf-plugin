@@ -131,6 +131,27 @@ describe BootstrapCfPlugin::Plugin do
     end
 
     context "when the organization does not exist" do
+
+      it 'does not crash on login, due to organization missing' do
+        called = false
+        stub.proxy(described_class).new do |cli|
+          stub(cli).invoke(:login, :username => 'user', :password => 'da_password') do
+            called = true
+            raise CF::UserFriendlyError, "There are no organizations"
+          end
+          stub(cli).invoke :logout
+          stub(cli).invoke :target, anything
+          stub(cli).invoke :create_org, anything
+          stub(cli).invoke :create_space, anything
+          stub(cli).invoke :create_service_auth_token, anything
+        end
+        exit_code = subject
+        called.should be_true
+        expect(error_output).not_to say("There are no organizations")
+        exit_code.should == 0
+      end
+
+
       it 'CF creates an Organization' do
         mock_invoke :create_org, :name => "bootstrap-org"
         subject

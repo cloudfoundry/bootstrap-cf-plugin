@@ -9,4 +9,5 @@ group :test do
   gem "fakefs"
   gem "rr"
   gem "debugger"
+  gem "blue-shell", "~> 0.1.0"
 end

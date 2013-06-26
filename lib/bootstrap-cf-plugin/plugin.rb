@@ -48,7 +48,10 @@ module BootstrapCfPlugin
       invoke :logout
       invoke :target, :url => cf_properties.fetch('cc').fetch('srv_api_uri')
 
-      invoke :login, :username => uaa_user[0], :password => uaa_user[1]
+      begin
+        invoke :login, :username => uaa_user[0], :password => uaa_user[1]
+      rescue CF::UserFriendlyError, /There are no (organizations|spaces)/
+      end
 
       org = find_or_create_org("bootstrap-org")
 
