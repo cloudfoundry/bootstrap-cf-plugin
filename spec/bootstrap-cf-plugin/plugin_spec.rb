@@ -39,6 +39,16 @@ describe BootstrapCfPlugin::Plugin do
         },
         {
           "properties" => {
+            "rabbit_gateway" => {
+              "token" => "rabbit_secret"
+            },
+            "rds_mysql_gateway" => {
+              "token" => "rds_secret"
+            },
+          }
+        },
+        {
+          "properties" => {
             "postgresql_gateway" => {
               "token" => postgresql_token
             }
@@ -192,6 +202,9 @@ describe BootstrapCfPlugin::Plugin do
       mock_invoke :create_service_auth_token, :label => 'mongodb', :provider => 'core', :token => mongodb_token
       mock_invoke :create_service_auth_token, :label => 'mysql', :provider => 'core', :token => mysql_token
       mock_invoke :create_service_auth_token, :label => 'postgresql', :provider => 'core', :token => postgresql_token
+      mock_invoke :create_service_auth_token, :label => 'rabbitmq', :provider => 'core', :token => "rabbit_secret"
+      mock_invoke :create_service_auth_token, :label => 'rds-mysql', :provider => 'aws', :token => "rds_secret"
+
       subject
     end
 

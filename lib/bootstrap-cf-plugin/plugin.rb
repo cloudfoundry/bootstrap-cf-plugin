@@ -6,7 +6,6 @@ module BootstrapCfPlugin
       # skip all default preconditions
     end
 
-
     desc "Bootstrap a CF deployment"
     group :admin
     input :infrastructure, :argument => :required, :desc => "The infrastructure to bootstrap and deploy"
@@ -80,12 +79,28 @@ module BootstrapCfPlugin
         if job['properties']
           job['properties'].each do |k,v|
             if v.is_a?(Hash) && v['token']
-              gateways << {label: k.gsub("_gateway", "").gsub("rabbit", "rabbitmq"), token: v['token'], provider: 'core'}
+              gateways << service_token(k, v)
             end
           end
         end
       end
     end
+
+    def service_token(job, token)
+      label = job.gsub("_gateway", "").gsub("rabbit", "rabbitmq")
+      provider = 'core'
+      if label.include?('rds')
+        label = 'rds-mysql'
+        provider = 'aws'
+      end
+
+      {
+        label: label,
+        token: token['token'],
+        provider: provider
+      }
+    end
+
 
     def insert_services_tokens
       (tokens_from_jobs(cf_services_manifest.fetch('jobs', []))).each do |gateway_info|
@@ -103,7 +118,6 @@ module BootstrapCfPlugin
       unless org
         invoke :create_org, :name => name, :target => false
         org = client.organization_by_name(name)
-        puts org.inspect
       end
       org
     end
