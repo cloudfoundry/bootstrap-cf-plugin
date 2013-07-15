@@ -69,6 +69,14 @@ describe BootstrapCfPlugin::SharedSecretsFile do
       end
     end
 
+    it "never includes any delimiters except - and _" do
+      50.times do
+        BootstrapCfPlugin::SharedSecretsFile.random_string.should_not include(';')
+        BootstrapCfPlugin::SharedSecretsFile.random_string.should_not include('"')
+        BootstrapCfPlugin::SharedSecretsFile.random_string.should_not include("'")
+      end
+    end
+
     it "warns when words file not found with better error message" do
       stub(Haddock::Password).generate {  raise Haddock::Password::NoWordsError }
       mock(BootstrapCfPlugin::SharedSecretsFile).puts("We can't find your dictionary words file.   Please make sure you have one installed... this is usually part of the wamerican pacakge on your system")

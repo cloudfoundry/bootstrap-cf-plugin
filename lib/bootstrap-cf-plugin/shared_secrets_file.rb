@@ -4,7 +4,7 @@ module BootstrapCfPlugin
   class SharedSecretsFile
     PASSWORD_LENGTH = 18
     def self.random_string
-      Haddock::Password.delimiters = %q#`~!@$%^&*()-_=+[{]}\;:'",<.>/?#
+      Haddock::Password.delimiters = "-_"
       Haddock::Password.generate(PASSWORD_LENGTH)
     rescue Haddock::Password::NoWordsError
       puts("We can't find your dictionary words file.   Please make sure you have one installed... this is usually part of the wamerican pacakge on your system")
