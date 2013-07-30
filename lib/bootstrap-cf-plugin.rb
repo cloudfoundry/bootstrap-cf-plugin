@@ -11,4 +11,3 @@ require 'cli/config'  # for load_yaml_file
 require 'cli/errors'  # for load_yaml_file
 require 'cli/yaml_helper'  # for load_yaml_file
 require 'cli/core_ext'  # for load_yaml_file
-require 'syck'
