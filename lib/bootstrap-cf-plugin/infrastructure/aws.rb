@@ -58,7 +58,7 @@ module BootstrapCfPlugin
         begin
           unless ENV.has_key? "BOSH_OVERRIDE_LIGHT_STEMCELL_URL"
             puts("Checking for stemcell...")
-            sh("bosh -n stemcells | tail -1 | grep 'No stemcells'")
+            sh("bosh -n stemcells 2>&1 | tail -1 | grep 'No stemcells'")
             puts("Missing stemcell uploading...")
           end
           stemcell_file_name = light_stemcell_url.split("/").last
