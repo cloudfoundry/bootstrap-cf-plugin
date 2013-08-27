@@ -5,6 +5,7 @@ require "bootstrap-cf-plugin/plugin"
 require "bootstrap-cf-plugin/shared_secrets_file"
 require "bootstrap-cf-plugin/director_check"
 require "bootstrap-cf-plugin/infrastructure/aws"
+require "bootstrap-cf-plugin/infrastructure/aws/generator"
 require 'net/http'
 
 require 'cli/config'  # for load_yaml_file

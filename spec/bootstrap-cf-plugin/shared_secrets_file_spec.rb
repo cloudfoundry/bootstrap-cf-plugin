@@ -78,9 +78,11 @@ describe BootstrapCfPlugin::SharedSecretsFile do
     end
 
     it "warns when words file not found with better error message" do
-      stub(Haddock::Password).generate {  raise Haddock::Password::NoWordsError }
-      mock(BootstrapCfPlugin::SharedSecretsFile).puts("We can't find your dictionary words file.   Please make sure you have one installed... this is usually part of the wamerican pacakge on your system")
-      lambda{BootstrapCfPlugin::SharedSecretsFile.random_string}.should raise_error(SystemExit)
+      Haddock::Password.stub(:generate).and_raise(Haddock::Password::NoWordsError)
+      BootstrapCfPlugin::SharedSecretsFile.should_receive(:puts).with("We can't find your dictionary words file.   Please make sure you have one installed... this is usually part of the wamerican pacakge on your system")
+      expect {
+        BootstrapCfPlugin::SharedSecretsFile.random_string
+      }.to raise_error(SystemExit)
     end
   end
 end

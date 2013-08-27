@@ -9,16 +9,10 @@ def asset(filename)
 end
 
 def stub_invoke(*args)
-  any_instance_of described_class do |cli|
-    stub(cli).invoke *args
-  end
+  described_class.any_instance.stub(:invoke).with(*args)
 end
 
 RSpec.configure do |c|
-  c.include Fake::FakeMethods
-
-  c.mock_with :rr
-
   c.include FakeHomeDir
   c.include CliHelper
   c.include InteractHelper

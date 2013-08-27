@@ -6,23 +6,28 @@ describe BootstrapCfPlugin::Plugin do
   let(:mysql_token) { 'mysql-secret' }
   let(:postgresql_token) { 'postgresql-secret' }
   let(:smtp_token) { 'ad_smtp_sendgriddev_token' }
-  let(:bootstrap_org) { fake :organization, :name => "bootstrap-org" }
-  let(:bootstrap_space) { fake :space, :name => "bootstrap-space" }
+  let(:bootstrap_org) { FactoryGirl.build(:organization, name: "bootstrap-org") }
+  let(:bootstrap_space) { FactoryGirl.build(:space, name: "bootstrap-space") }
 
   before do
-    stub(BootstrapCfPlugin::DirectorCheck).check
-    stub(BootstrapCfPlugin::Infrastructure::Aws).bootstrap
-    stub(BootstrapCfPlugin::Infrastructure::Aws).generate_stub
-    stub(BootstrapCfPlugin::SharedSecretsFile).find_or_create
+    BootstrapCfPlugin::DirectorCheck.stub(:check)
+    BootstrapCfPlugin::Infrastructure::Aws.stub(:bootstrap)
+    BootstrapCfPlugin::Infrastructure::Aws.stub(:generate_stub)
+    BootstrapCfPlugin::SharedSecretsFile.stub(:find_or_create)
     stub_invoke :logout
     stub_invoke :login, anything
     stub_invoke :target, anything
     stub_invoke :create_space, anything
     stub_invoke :create_org, anything
     stub_invoke :create_service_auth_token, anything
-    stub_client
+    #stub_client
   end
 
+  def fake_client(*args)
+    client = FactoryGirl.build(:client)
+    client.stub(*args)
+    client
+  end
 
   def services_manifest_hash
     {
@@ -111,8 +116,9 @@ describe BootstrapCfPlugin::Plugin do
 
     describe "verifying access to director" do
       it "should blow up if unable to get director status" do
-        stub(BootstrapCfPlugin::DirectorCheck).check { raise "some error message" }
-        dont_allow(BootstrapCfPlugin::Infrastructure::Aws).bootstrap
+        BootstrapCfPlugin::DirectorCheck.should_receive(:check).
+          and_raise("some error message")
+        BootstrapCfPlugin::Infrastructure::Aws.should_not_receive(:bootstrap)
         expect {
           subject
         }.to raise_error "some error message"
@@ -120,12 +126,12 @@ describe BootstrapCfPlugin::Plugin do
     end
 
     it "should invoke AWS.bootstrap when infrastructure is AWS" do
-      mock(BootstrapCfPlugin::Infrastructure::Aws).bootstrap.with(nil)
+      BootstrapCfPlugin::Infrastructure::Aws.should_receive(:bootstrap).with(nil)
       subject
     end
 
     it "should use given template file" do
-      mock(BootstrapCfPlugin::Infrastructure::Aws).bootstrap.with("test.erb")
+      BootstrapCfPlugin::Infrastructure::Aws.should_receive(:bootstrap).with("test.erb")
       cf %W[bootstrap aws test.erb]
     end
 
@@ -143,20 +149,21 @@ describe BootstrapCfPlugin::Plugin do
     context "when the organization does not exist" do
 
       it 'does not crash on login, due to organization missing' do
-        called = false
-        stub.proxy(described_class).new do |cli|
-          stub(cli).invoke(:login, :username => 'user', :password => 'da_password') do
-            called = true
-            raise CF::UserFriendlyError, "There are no organizations"
-          end
-          stub(cli).invoke :logout
-          stub(cli).invoke :target, anything
-          stub(cli).invoke :create_org, anything
-          stub(cli).invoke :create_space, anything
-          stub(cli).invoke :create_service_auth_token, anything
-        end
+        cli = double("CLI", :input= => nil)
+        cli.should_receive(:invoke).
+          with(:login, :username => 'user', :password => 'da_password').
+          and_raise(CF::UserFriendlyError, "There are no organizations")
+
+        described_class.stub(:new).and_return(cli)
+        cli.stub(:execute)
+        cli.stub(:invoke).with(:logout)
+        cli.stub(:invoke).with(:login)
+        cli.stub(:invoke).with(:target, anything)
+        cli.stub(:invoke).with(:create_org, anything)
+        cli.stub(:invoke).with(:create_space, anything)
+        cli.stub(:invoke).with(:create_service_auth_token, anything)
+
         exit_code = subject
-        called.should be_true
         expect(error_output).not_to say("There are no organizations")
         exit_code.should == 0
       end
@@ -209,24 +216,17 @@ describe BootstrapCfPlugin::Plugin do
     end
 
     it "ignores services tokens that already exist" do
-      any_instance_of described_class do |cli|
-        mock(cli).invoke(:create_service_auth_token, anything) { raise CFoundry::ServiceAuthTokenLabelTaken }
-      end
+      described_class.any_instance.should_receive(:invoke).
+        with(:create_service_auth_token, anything).
+        and_raise(CFoundry::ServiceAuthTokenLabelTaken)
       subject
     end
 
-    context "when the org was created" do
-      let(:client) { fake_client :organizations => [bootstrap_org] }
-
-      let(:bootstrap_org) { fake :organization, :name => "bootstrap-org" }
-
-    end
-
     context "when the org and space were created" do
-      let(:client) { fake_client :organizations => [bootstrap_org], :spaces => [bootstrap_space] }
+      let(:client) { FactoryGirl.build(:client, :organizations => [bootstrap_org], :spaces => [bootstrap_space]) }
 
-      let(:bootstrap_org) { fake :organization, :name => "bootstrap-org" }
-      let(:bootstrap_space) { fake :space, :name => "bootstrap-space" }
+      let(:bootstrap_org) { FactoryGirl.build(:user, name: "bootstrap-org")  }
+      let(:bootstrap_space) { FactoryGirl.build(:space, name: "bootstrap-space") }
 
       it 'CF targets the org and space' do
         mock_invoke :target, :url => "http://example.com", :organization => bootstrap_org, :space => bootstrap_space
@@ -241,8 +241,9 @@ describe BootstrapCfPlugin::Plugin do
 
       describe "verifying access to director" do
         it "should blow up if unable to get director status" do
-          stub(BootstrapCfPlugin::DirectorCheck).check { raise "some error message" }
-          dont_allow(BootstrapCfPlugin::Infrastructure::Aws).generate_stub
+          BootstrapCfPlugin::DirectorCheck.should_receive(:check).
+            and_raise("some error message")
+          BootstrapCfPlugin::Infrastructure::Aws.should_not_receive(:generate_stub)
           expect {
             subject
           }.to raise_error "some error message"
@@ -250,12 +251,14 @@ describe BootstrapCfPlugin::Plugin do
       end
 
       it "should invoke SharedSecretsFile.find_or_create" do
-        mock(BootstrapCfPlugin::SharedSecretsFile).find_or_create.with("cf-shared-secrets.yml")
+        BootstrapCfPlugin::SharedSecretsFile.should_receive(:find_or_create).
+          with("cf-shared-secrets.yml")
         subject
       end
 
       it "should invoke AWS.generate_stub when infrastructure is AWS" do
-        mock(BootstrapCfPlugin::Infrastructure::Aws).generate_stub.with("cf-aws-stub.yml", "cf-shared-secrets.yml")
+        BootstrapCfPlugin::Infrastructure::Aws.should_receive(:generate_stub).
+          with("cf-aws-stub.yml", "cf-shared-secrets.yml")
         subject
       end
     end

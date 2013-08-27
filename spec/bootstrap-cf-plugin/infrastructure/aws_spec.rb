@@ -7,11 +7,11 @@ describe BootstrapCfPlugin::Infrastructure::Aws do
   let(:manifest_name) { "#{release_name.gsub('-release', '')}-aws.yml" }
 
   before do
-    any_instance_of(BootstrapCfPlugin::Infrastructure::Aws::Generator, :director_uuid => "12345-12345-12345")
-    stub(described_class).sh
-    stub(described_class).sh_output
-    stub(described_class).puts
-    stub(described_class).cf_release_path { |name| cf_release_path }
+    BootstrapCfPlugin::Infrastructure::Aws::Generator.any_instance.stub(:director_uuid => "12345-12345-12345")
+    described_class.stub(:sh)
+    described_class.stub(:sh_output)
+    described_class.stub(:puts)
+    described_class.stub(:cf_release_path).and_return(cf_release_path)
 
     FileUtils.cp asset("aws/aws_receipt.yml"), File.join(temp_dir, "aws_vpc_receipt.yml")
     FileUtils.cp asset("aws/rds_receipt.yml"), File.join(temp_dir, "aws_rds_receipt.yml")
@@ -40,29 +40,31 @@ describe BootstrapCfPlugin::Infrastructure::Aws do
     end
 
     it "does the bosh deploy" do
-      mock(described_class).sh('bosh -n deploy')
+      described_class.should_receive(:sh).with('bosh -n deploy')
       subject
     end
 
     describe "releases" do
       it 'checkouts the cf-release from github when not present' do
-        stub(Dir).tmpdir { temp_dir }
-        mock(described_class).sh("git clone -b release-candidate http://github.com/cloudfoundry/cf-release #{cf_release_path}") { clone_release }
+        Dir.stub(tmpdir: temp_dir)
+        described_class.should_receive(:sh).
+          with("git clone -b release-candidate http://github.com/cloudfoundry/cf-release #{cf_release_path}").
+          and_return(clone_release)
         subject
       end
 
       it 'updates the cf-release' do
-        mock(described_class).update_release(cf_release_path)
+        described_class.should_receive(:update_release).with(cf_release_path)
         subject
       end
 
       it 'creates the cf bosh release' do
-        mock(described_class).sh("cd #{cf_release_path} && bosh -n create release --force")
+        described_class.should_receive(:sh).with("cd #{cf_release_path} && bosh -n create release --force")
         subject
       end
 
       it 'uploads the cf bosh release' do
-        mock(described_class).sh_output("cd #{cf_release_path} && bosh -n upload release --rebase")
+        described_class.should_receive(:sh_output).with("cd #{cf_release_path} && bosh -n upload release --rebase")
         subject
       end
 
@@ -70,7 +72,7 @@ describe BootstrapCfPlugin::Infrastructure::Aws do
         command = "cd #{cf_release_path} && bosh -n upload release --rebase"
         error = 'Error 100: Rebase is attempted without any job or package changes'
 
-        mock(described_class).sh_output(command) { raise RuntimeError.new(error) }
+        described_class.should_receive(:sh_output).with(command).and_raise(RuntimeError.new(error))
         expect { subject }.not_to raise_error
       end
     end
@@ -84,12 +86,12 @@ describe BootstrapCfPlugin::Infrastructure::Aws do
 
       it 'applies the template to the manifest file with bosh diff' do
         aws_template = File.join(Dir.tmpdir, "cf-release", "templates", "cf-aws-template.yml.erb")
-        mock(described_class).sh("bosh -n diff #{aws_template}")
+        described_class.should_receive(:sh).with("bosh -n diff #{aws_template}")
         subject
       end
 
       it 'sets the bosh deployment' do
-        mock(described_class).sh('bosh -n deployment cf-aws.yml')
+        described_class.should_receive(:sh).with('bosh -n deployment cf-aws.yml')
         subject
       end
     end
@@ -109,34 +111,37 @@ describe BootstrapCfPlugin::Infrastructure::Aws do
     context "if no stemcell URL override is set in the environment" do
       context "if the stemcell doesn't exist" do
         before do
-          mock(described_class).sh("bosh -n stemcells | tail -1 | grep 'No stemcells'") { 0 }
+          described_class.stub(:sh).with("bosh -n stemcells | tail -1 | grep 'No stemcells'").and_return(0)
         end
 
         it 'downloads the latest stemcell from S3' do
-          mock(described_class).sh("cd /tmp && rm -f #{stemcell_file} && wget '#{bucket_url}/#{stemcell_file}' --no-check-certificate")
+          described_class.should_receive(:sh).
+            with("cd /tmp && rm -f #{stemcell_file} && wget '#{bucket_url}/#{stemcell_file}' --no-check-certificate")
           subject
         end
 
         it 'uploads the lastest stemcell' do
-          mock(described_class).sh("bosh -n upload stemcell /tmp/#{stemcell_file}")
+          described_class.should_receive(:sh).with("bosh -n upload stemcell /tmp/#{stemcell_file}")
           subject
         end
       end
 
       context "if the stemcell does exist" do
         before do
-          stub(described_class).sh("bosh -n stemcells | tail -1 | grep 'No stemcells'") do
-            raise "Failed to run: bosh -n stemcells | tail -1 | grep 'No stemcells'"
-          end
+          described_class.stub(:sh).
+            with("bosh -n stemcells | tail -1 | grep 'No stemcells'").
+            and_raise("Failed to run: bosh -n stemcells | tail -1 | grep 'No stemcells'")
         end
 
         it 'skips downloading the stemcell from S3' do
-          dont_allow(described_class).sh("cd /tmp && rm -f #{stemcell_file} && wget '#{bucket_url}/#{stemcell_file}' --no-check-certificate")
+          described_class.should_not_receive(:sh).
+            with("cd /tmp && rm -f #{stemcell_file} && wget '#{bucket_url}/#{stemcell_file}' --no-check-certificate")
           subject
         end
 
         it 'skips uploading the stemcell' do
-          dont_allow(described_class).sh("bosh -n upload stemcell /tmp/#{stemcell_file}")
+          described_class.should_not_receive(:sh).with
+            ("bosh -n upload stemcell /tmp/#{stemcell_file}")
           subject
         end
       end
@@ -152,12 +157,13 @@ describe BootstrapCfPlugin::Infrastructure::Aws do
       end
 
       it 'downloads the stemcell at the given URL' do
-        mock(described_class).sh("cd /tmp && rm -f stemcell.tgz && wget 'http://stemcells-r-us.com/stemcell.tgz' --no-check-certificate")
+        described_class.should_receive(:sh).
+          with("cd /tmp && rm -f stemcell.tgz && wget 'http://stemcells-r-us.com/stemcell.tgz' --no-check-certificate")
         subject
       end
 
       it 'uploads the latest stemcell' do
-        mock(described_class).sh("bosh -n upload stemcell /tmp/stemcell.tgz")
+        described_class.should_receive(:sh).with("bosh -n upload stemcell /tmp/stemcell.tgz")
         subject
       end
     end
@@ -173,13 +179,13 @@ describe BootstrapCfPlugin::Infrastructure::Aws do
     end
 
     it "uploads stemcell" do
-      mock(described_class).upload_stemcell
+      described_class.should_receive(:upload_stemcell)
       subject
     end
 
     it "deploys release for cf-release and cf-services-release" do
-      mock(described_class).deploy_release("cf-release", "cf-aws.yml", "cf-shared-secrets.yml", template_file)
-      mock(described_class).deploy_release("cf-services-release", "cf-services-aws.yml", "cf-shared-secrets.yml", template_file)
+      described_class.should_receive(:deploy_release).with("cf-release", "cf-aws.yml", "cf-shared-secrets.yml", template_file)
+      described_class.should_receive(:deploy_release).with("cf-services-release", "cf-services-aws.yml", "cf-shared-secrets.yml", template_file)
       subject
     end
 
@@ -192,7 +198,7 @@ describe BootstrapCfPlugin::Infrastructure::Aws do
       let(:template_file) { "template.erb" }
 
       it 'applies the template given with bosh diff' do
-        mock(described_class).sh("bosh -n diff template.erb")
+        described_class.should_receive(:sh).with("bosh -n diff template.erb")
         subject
       end
     end

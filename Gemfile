@@ -7,7 +7,6 @@ group :test do
   gem "rake"
   gem "rspec"
   gem "fakefs"
-  gem "rr"
   gem "debugger"
   gem "factory_girl"
   gem "blue-shell", "~> 0.1.0"
