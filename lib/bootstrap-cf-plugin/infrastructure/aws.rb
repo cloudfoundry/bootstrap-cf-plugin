@@ -10,6 +10,8 @@ module BootstrapCfPlugin
         deploy_release("cf-services-release", "cf-services-aws.yml", "cf-shared-secrets.yml", template_file)
 
         puts "INFO: bootstrap complete"
+
+        puts "Bosh Status: "
         sh("bosh -n status")
       end
 
@@ -18,7 +20,6 @@ module BootstrapCfPlugin
         git_url = "http://github.com/cloudfoundry/#{release_name}"
 
         puts("Creating release #{release_name}")
-        puts "git clone -b release-candidate #{git_url} #{cf_release_path}"
 
         sh("git clone -b release-candidate #{git_url} #{cf_release_path}") unless Dir.exist?(cf_release_path)
         dev_config_path = File.join(cf_release_path, "config", "dev.yml")
@@ -37,6 +38,8 @@ module BootstrapCfPlugin
         sh("bosh -n diff #{template_file}")
 
         puts("Running bosh deploy...")
+        sh('bosh target')
+
         sh("bosh -n deploy")
       end
 
